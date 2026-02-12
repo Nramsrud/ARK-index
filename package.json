@@ -1,0 +1,46 @@
+{
+  "name": "ark-index",
+  "version": "0.1.0",
+  "description": "Standalone repository indexing engine extracted from ARK",
+  "type": "module",
+  "main": "dist/lib/index/index.js",
+  "exports": {
+    ".": "./dist/lib/index/index.js"
+  },
+  "bin": {
+    "ark-index": "./bin/ark-index"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ark",
+    "index",
+    "code-index",
+    "agent-tooling"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.8"
+  }
+}
