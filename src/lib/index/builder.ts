@@ -60,6 +60,8 @@ export interface IndexBuildOptions {
   maxFiles: number;
   /** Respect .gitignore */
   respectGitignore: boolean;
+  /** Follow symlinks during discovery */
+  followSymlinks: boolean;
   /** Index adapters to use */
   adapters: IndexAdapter[];
   /** Verbose logging */
@@ -140,6 +142,7 @@ export async function buildIndex(options: IndexBuildOptions): Promise<IndexBuild
     maxFileKb: options.maxFileKb,
     maxFiles: options.maxFiles,
     respectGitignore: options.respectGitignore,
+    followSymlinks: options.followSymlinks,
     repoRoot: options.repoRoot,
   };
 

@@ -35,6 +35,8 @@ export interface DiscoveryOptions {
   maxFiles: number;
   /** Respect .gitignore patterns */
   respectGitignore: boolean;
+  /** Follow symlinks during discovery */
+  followSymlinks: boolean;
   /** Repository root directory */
   repoRoot: string;
 }
@@ -62,8 +64,12 @@ function buildRipgrepArgs(options: DiscoveryOptions): string[] {
   const args: string[] = [
     '--files', // List files only
     '--hidden', // Include hidden files
-    '--follow', // Don't follow symlinks (we'll handle this manually)
   ];
+
+  // Follow symlinks if enabled
+  if (options.followSymlinks) {
+    args.push('--follow');
+  }
 
   // Respect .gitignore by default (ripgrep does this automatically)
   // Use --no-ignore to disable
@@ -160,8 +166,8 @@ export function discoverFiles(options: DiscoveryOptions): DiscoveryResult {
       continue;
     }
 
-    // Skip symlinks
-    if (isSymlink(absolutePath)) {
+    // Skip symlinks only if followSymlinks is disabled
+    if (!options.followSymlinks && isSymlink(absolutePath)) {
       result.skipped.push({
         path: normalizedPath,
         reason: 'Symlink skipped',
@@ -169,8 +175,30 @@ export function discoverFiles(options: DiscoveryOptions): DiscoveryResult {
       continue;
     }
 
-    // Check if readable
-    if (!isReadable(absolutePath)) {
+    // Resolve symlink if enabled and path is a symlink
+    let resolvedPath = absolutePath;
+    if (options.followSymlinks && isSymlink(absolutePath)) {
+      try {
+        resolvedPath = fs.realpathSync(absolutePath);
+        // Verify the resolved target exists and is within root or at least exists
+        if (!fs.existsSync(resolvedPath)) {
+          result.skipped.push({
+            path: normalizedPath,
+            reason: 'Symlink target does not exist',
+          });
+          continue;
+        }
+      } catch (error) {
+        result.skipped.push({
+          path: normalizedPath,
+          reason: `Failed to resolve symlink: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        });
+        continue;
+      }
+    }
+
+    // Check if readable (use resolved path for actual file access)
+    if (!isReadable(resolvedPath)) {
       result.skipped.push({
         path: normalizedPath,
         reason: 'Permission denied',
@@ -178,8 +206,8 @@ export function discoverFiles(options: DiscoveryOptions): DiscoveryResult {
       continue;
     }
 
-    // Get file stats
-    const stats = getFileStats(absolutePath);
+    // Get file stats (use resolved path for actual file stats)
+    const stats = getFileStats(resolvedPath);
     if (!stats) {
       result.skipped.push({
         path: normalizedPath,
@@ -253,6 +281,7 @@ export function getDefaultDiscoveryOptions(repoRoot: string): DiscoveryOptions {
     maxFileKb: 256,
     maxFiles: 100000,
     respectGitignore: true,
+    followSymlinks: true,
     repoRoot,
   };
 }

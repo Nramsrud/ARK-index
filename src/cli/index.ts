@@ -154,6 +154,7 @@ async function runIndex(options: CliOptions): Promise<number> {
     maxFileKb: indexConfig.max_file_kb,
     maxFiles: indexConfig.max_files,
     respectGitignore: true,
+    followSymlinks: indexConfig.follow_symlinks,
     adapters: [],
     verbose: !jsonMode,
     log: (message: string) => log.verbose(message),
