@@ -7,6 +7,7 @@ export interface IndexConfig {
   exclude_globs: string[];
   max_file_kb: number;
   max_files: number;
+  follow_symlinks: boolean;
 }
 
 const DEFAULT_INDEX_CONFIG: IndexConfig = {
@@ -22,6 +23,7 @@ const DEFAULT_INDEX_CONFIG: IndexConfig = {
   ],
   max_file_kb: 256,
   max_files: 100000,
+  follow_symlinks: true,
 };
 
 interface ArkYamlShape {
@@ -38,6 +40,13 @@ function asStringArray(value: unknown, field: string): string[] {
 function asPositiveInt(value: unknown, field: string): number {
   if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
     throw new Error(`Invalid ${field}: expected positive integer`);
+  }
+  return value;
+}
+
+function asBoolean(value: unknown, field: string): boolean {
+  if (typeof value !== 'boolean') {
+    throw new Error(`Invalid ${field}: expected boolean`);
   }
   return value;
 }
@@ -101,6 +110,10 @@ export function loadIndexConfig(cwd: string, repoRoot: string, explicitConfigPat
 
   if (arkYaml.index.max_files !== undefined) {
     merged.max_files = asPositiveInt(arkYaml.index.max_files, 'index.max_files');
+  }
+
+  if (arkYaml.index.follow_symlinks !== undefined) {
+    merged.follow_symlinks = asBoolean(arkYaml.index.follow_symlinks, 'index.follow_symlinks');
   }
 
   return merged;
